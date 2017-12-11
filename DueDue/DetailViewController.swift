@@ -7,39 +7,42 @@
 //
 
 import UIKit
+import RxSwift
 
 class DetailViewController: UIViewController {
 
     @IBOutlet weak var detailDescriptionLabel: UILabel!
-
-
-    func configureView() {
-        // Update the user interface for the detail item.
-        if let detail = detailItem {
-            if let label = detailDescriptionLabel {
-                label.text = detail.description
-            }
-        }
+    private var productVariable = PublishSubject<Product>()
+    public var productObservable: Observable<Product> {
+        return productVariable.asObservable()
+    }
+    
+    public static func create() -> DetailViewController {
+        return UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: String(describing: self)) as! DetailViewController
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        configureView()
+        addProduct()
     }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        productVariable.onCompleted()
     }
-
-    var detailItem: NSDate? {
-        didSet {
-            // Update the view.
-            configureView()
-        }
+    
+    private func addProduct() {
+        let product = Product(name: "A book",
+                              category: .book,
+                              image: nil,
+                              barCode: BarCode(number: 0, image: nil),
+                              manufacturer: "",
+                              desc: "")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: { [weak self] in
+            guard let `self` = self else { return }
+            self.productVariable.onNext(product)
+            self.dismiss(animated: true, completion: nil)
+        })
     }
-
-
 }
 
